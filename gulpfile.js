@@ -1,6 +1,3 @@
-var gulp = require('gulp'),
-	jade = require('gulp-jade'),
-	sass = require('gulp-sass');
 /*
 Gulp Command
 .task()
@@ -9,39 +6,63 @@ Gulp Command
 .dest()
 .start()
  */
+
+var gulp = require('gulp'),
+	jade = require('gulp-jade'),
+	sass = require('gulp-sass'),
+	browserSync = require('browser-sync'),
+	reload = browserSync.reload;
+
+/**
+ * --------------------------------
+ * 환경설정
+ * --------------------------------
+ */
+
 var config = {
-	'jade' : { 'pretty' : false }
+	'jade' : { 'pretty' : true },
+	'sass' : { 'outputStyle' : 'compact'}
 };
 
-gulp.task('default', ['jade','sass','watch']);
+/**
+ * --------------------------------
+ * Gulp 업무
+ * --------------------------------
+ */
+// 기본 업무
+gulp.task('default', ['jade','sass'], function() {
+	broewerSync({'server': './dist'})
+	gulp.start('watch')
+});
 
+//관찰 업무
 gulp.task('watch', function () {
-	gulp.watch(['src/index.jade'],['jade'])
-	gulp.watch(['src/sass/style.scss'],['jade'])
+	gulp.watch(['src/index.jade'],['watch:jade'])
+	gulp.watch(['src/sass/**/*.scss'],['sass'])
 })
 
-/* Fonft-End WOrkflow tasks*/
+gulp.task('satch:jade', ['jade'], reload);
 
-//Jade -> html
+//변경 업무 Jade -> html
 gulp.task('jade', function () {
-	gulp.src('src/index.jade')
+	return gulp.src('src/**/*.jade')
 		.pipe(jade( config.jade))
+		.on('error', errorLog)
 		.pipe(gulp.dest('dist'));
 });
-gulp.task('sass', function () {
-	gulp.src('src/sass/style.scss')
-		.pipe(sass())
-		.pipe(gulp.dest('dist/sass'));
-});
- /*function () {
-	console.log('Gulp "Default" Task is Start!!');
-	gulp.start('eat:food');
-	gulp.start('show:game');
-});*/
 
-/*gulp.task('eat:food', function () {
-	console.log('show me the FOOD! :-)');
+//변경 업무 Sass -> Css
+gulp.task('sass', function () {
+	return gulp.src('src/sass/**/*.scss')
+		.pipe(sass(config.sass).on('error', sass.logError))
+		.pipe(gulp.dest('dist/css'))
+		.pipe(reload({stream:true}));
 });
-gulp.task('show:game', function () {
-	console.log('play the Game! :-)');
-});*/
+
+/**
+ * 유틸리티
+ */
+function errorLog (error) {
+	console.error.bind(error);
+	this.emit('end')
+}
